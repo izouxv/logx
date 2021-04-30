@@ -56,8 +56,8 @@ func InitLogger() (*zap.Logger, *zap.SugaredLogger) {
 	})
 
 	// 获取 info、error日志文件的io.Writer 抽象 getWriter() 在下方实现
-	infoWriter := getWriter(fmt.Sprintf("%v/%v_info.log", appName, logsFolder))
-	errorWriter := getWriter(fmt.Sprintf("%v/%v_error.log", appName, logsFolder))
+	infoWriter := getWriter(fmt.Sprintf("%v/%v_info.log", logsFolder, appName))
+	errorWriter := getWriter(fmt.Sprintf("%v/%v_error.log", logsFolder, appName))
 
 	// 最后创建具体的Logger
 	core := zapcore.NewTee(
