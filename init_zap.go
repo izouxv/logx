@@ -15,6 +15,7 @@ import (
 
 var Logger1 *zap.SugaredLogger
 var Logger2 *zap.Logger
+var appName string = "demo"
 var logsFolder string = "./logs"
 
 func init() {
@@ -22,6 +23,10 @@ func init() {
 }
 func InitLoggerRestart(logsFolde22r string) {
 	logsFolder = logsFolde22r
+	Logger2, Logger1 = InitLogger()
+}
+func InitLoggerName(appNameappName string) {
+	appName = appNameappName
 	Logger2, Logger1 = InitLogger()
 }
 func InitLogger() (*zap.Logger, *zap.SugaredLogger) {
@@ -51,8 +56,8 @@ func InitLogger() (*zap.Logger, *zap.SugaredLogger) {
 	})
 
 	// 获取 info、error日志文件的io.Writer 抽象 getWriter() 在下方实现
-	infoWriter := getWriter(fmt.Sprintf("%v/demo_info.log", logsFolder))
-	errorWriter := getWriter(fmt.Sprintf("%v/demo_error.log", logsFolder))
+	infoWriter := getWriter(fmt.Sprintf("%v/%v_info.log", appName, logsFolder))
+	errorWriter := getWriter(fmt.Sprintf("%v/%v_error.log", appName, logsFolder))
 
 	// 最后创建具体的Logger
 	core := zapcore.NewTee(
