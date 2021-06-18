@@ -3,6 +3,7 @@ package logx
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -17,8 +18,12 @@ var Logger1 *zap.SugaredLogger
 var Logger2 *zap.Logger
 var appName string = "demo"
 var logsFolder string = "./logs"
+var Stdout bool = false
 
 func init() {
+	Logger2, Logger1 = InitLogger()
+}
+func InitLoggerReset() {
 	Logger2, Logger1 = InitLogger()
 }
 func InitLoggerRestart(logsFolde22r string) {
@@ -59,10 +64,25 @@ func InitLogger() (*zap.Logger, *zap.SugaredLogger) {
 	infoWriter := getWriter(fmt.Sprintf("%v/%v_info.log", logsFolder, appName))
 	errorWriter := getWriter(fmt.Sprintf("%v/%v_error.log", logsFolder, appName))
 
-	// 最后创建具体的Logger
-	core := zapcore.NewTee(
+	var cores []zapcore.Core = []zapcore.Core{
 		zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), infoLevel),
 		zapcore.NewCore(encoder, zapcore.AddSync(errorWriter), errorLevel),
+	}
+
+	if Stdout {
+		consoleDebugging := zapcore.Lock(os.Stdout)
+		consoleErrors := zapcore.Lock(os.Stderr)
+		// consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+		var stdoutcore []zapcore.Core = []zapcore.Core{
+			zapcore.NewCore(encoder, consoleDebugging, infoLevel),
+			zapcore.NewCore(encoder, consoleErrors, errorLevel),
+		}
+		cores = append(cores, stdoutcore...)
+	}
+
+	// 最后创建具体的Logger
+	core := zapcore.NewTee(
+		cores...,
 	)
 
 	log := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
