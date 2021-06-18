@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// https://github.com/uber-go/zap/blob/master/example_test.go
+
 func init() {
 	Stdout = true
 }
