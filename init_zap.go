@@ -121,6 +121,14 @@ func Infof(template string, args ...interface{}) {
 	Logger1.Infof(template, args...)
 }
 
+func Print(args ...interface{}) {
+	Logger1.Info(args...)
+}
+
+func Printf(template string, args ...interface{}) {
+	Logger1.Infof(template, args...)
+}
+
 func Warn(args ...interface{}) {
 	Logger1.Warn(args...)
 }
