@@ -36,7 +36,25 @@ func LogFileDefault() []zapcore.Core {
 	var logsFolder string = "./logs"
 	return LogFile(appName, logsFolder)
 }
+
 func LogFile(appName string, logsFolder string) []zapcore.Core {
+	getWriter := func(filename string) io.Writer {
+		// 生成rotatelogs的Logger 实际生成的文件名 demo.log.YYmmddHH
+		// demo.log是指向最新日志的链接
+		// 保存7天内的日志，每1小时(整点)分割一次日志
+		hook, err := rotatelogs.New(
+			strings.Replace(filename, ".log", "", -1)+"-%Y%m%d%H.log", // 没有使用go风格反人类的format格式
+			//rotatelogs.WithLinkName(filename),
+			rotatelogs.WithMaxAge(time.Hour*24*2),
+			//rotatelogs.WithRotationTime(time.Hour),
+		)
+
+		if err != nil {
+			panic(err)
+		}
+		return hook
+	}
+
 	// 获取 info、error日志文件的io.Writer 抽象 getWriter() 在下方实现
 	infoWriter := getWriter(fmt.Sprintf("%v/%v_info.log", logsFolder, appName))
 	warnWriter := getWriter(fmt.Sprintf("%v/%v_warn.log", logsFolder, appName))
@@ -51,9 +69,7 @@ func LogFile(appName string, logsFolder string) []zapcore.Core {
 }
 
 func LOGX(cores []zapcore.Core) (*zap.Logger, *zap.SugaredLogger) {
-	core := zapcore.NewTee(
-		cores...,
-	)
+	core := zapcore.NewTee(cores...)
 	log := zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1)) // 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	return log, log.Sugar()
 }
@@ -87,20 +103,3 @@ var warnLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 var errorLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= zapcore.ErrorLevel
 })
-
-func getWriter(filename string) io.Writer {
-	// 生成rotatelogs的Logger 实际生成的文件名 demo.log.YYmmddHH
-	// demo.log是指向最新日志的链接
-	// 保存7天内的日志，每1小时(整点)分割一次日志
-	hook, err := rotatelogs.New(
-		strings.Replace(filename, ".log", "", -1)+"-%Y%m%d%H.log", // 没有使用go风格反人类的format格式
-		//rotatelogs.WithLinkName(filename),
-		rotatelogs.WithMaxAge(time.Hour*24*2),
-		//rotatelogs.WithRotationTime(time.Hour),
-	)
-
-	if err != nil {
-		panic(err)
-	}
-	return hook
-}
