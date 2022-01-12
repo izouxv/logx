@@ -22,12 +22,20 @@ func init() {
 	items = append(items, LogStdout()...)
 	Logger2, Logger1 = LOGX(items)
 }
+func DiyWriter(w io.Writer, levelFunc zap.LevelEnablerFunc) []zapcore.Core {
+	consoleDebugging := zapcore.Lock(zapcore.AddSync(w))
+	// consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+	var stdoutcore []zapcore.Core = []zapcore.Core{
+		zapcore.NewCore(Encoder, consoleDebugging, levelFunc),
+	}
+	return stdoutcore
+}
 
 func LogStdout() []zapcore.Core {
 	consoleDebugging := zapcore.Lock(os.Stdout)
 	// consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 	var stdoutcore []zapcore.Core = []zapcore.Core{
-		zapcore.NewCore(encoder, consoleDebugging, debugLevel),
+		zapcore.NewCore(Encoder, consoleDebugging, DebugLevel),
 	}
 	return stdoutcore
 }
@@ -61,9 +69,9 @@ func LogFile(appName string, logsFolder string) []zapcore.Core {
 	errorWriter := getWriter(fmt.Sprintf("%v/%v_error.log", logsFolder, appName))
 
 	var cores []zapcore.Core = []zapcore.Core{
-		zapcore.NewCore(encoder, zapcore.AddSync(infoWriter), infoLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(warnWriter), warnLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(errorWriter), errorLevel),
+		zapcore.NewCore(Encoder, zapcore.AddSync(infoWriter), InfoLevel),
+		zapcore.NewCore(Encoder, zapcore.AddSync(warnWriter), WarnLevel),
+		zapcore.NewCore(Encoder, zapcore.AddSync(errorWriter), ErrorLevel),
 	}
 	return cores
 }
@@ -75,7 +83,7 @@ func LOGX(cores []zapcore.Core) (*zap.Logger, *zap.SugaredLogger) {
 }
 
 // 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
-var encoder = zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
+var Encoder = zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 	MessageKey:  "msg",
 	LevelKey:    "level",
 	EncodeLevel: zapcore.CapitalLevelEncoder,
@@ -91,15 +99,15 @@ var encoder = zapcore.NewConsoleEncoder(zapcore.EncoderConfig{
 })
 
 // 实现两个判断日志等级的interface
-var debugLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+var DebugLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= zapcore.DebugLevel
 })
-var infoLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+var InfoLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= zapcore.InfoLevel
 })
-var warnLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+var WarnLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= zapcore.WarnLevel
 })
-var errorLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+var ErrorLevel = zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
 	return lvl >= zapcore.ErrorLevel
 })
