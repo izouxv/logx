@@ -64,11 +64,13 @@ func LogFile(appName string, logsFolder string) []zapcore.Core {
 	}
 
 	// 获取 info、error日志文件的io.Writer 抽象 getWriter() 在下方实现
+	debugWriter := getWriter(fmt.Sprintf("%v/%v_debug.log", logsFolder, appName))
 	infoWriter := getWriter(fmt.Sprintf("%v/%v_info.log", logsFolder, appName))
 	warnWriter := getWriter(fmt.Sprintf("%v/%v_warn.log", logsFolder, appName))
 	errorWriter := getWriter(fmt.Sprintf("%v/%v_error.log", logsFolder, appName))
 
 	var cores []zapcore.Core = []zapcore.Core{
+		zapcore.NewCore(Encoder, zapcore.AddSync(debugWriter), DebugLevel),
 		zapcore.NewCore(Encoder, zapcore.AddSync(infoWriter), InfoLevel),
 		zapcore.NewCore(Encoder, zapcore.AddSync(warnWriter), WarnLevel),
 		zapcore.NewCore(Encoder, zapcore.AddSync(errorWriter), ErrorLevel),
